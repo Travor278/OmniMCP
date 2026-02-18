@@ -6,7 +6,7 @@
 
 This project implements a complete multimodal engineering automation framework built on the **Model Context Protocol (MCP)**. The core design philosophy couples **external, prebuilt MCP services/plugins** with a **custom in-house MCP tool server**, both running cooperatively within a single VS Code workspace:
 
-- **External layer**: `.vscode/mcp.json` declares third-party MCP services — Playwright, GitHub, Blender-MCP, FreeCAD-MCP, and Godot-MCP — connected via stdio or HTTP, all dispatched through VS Code Copilot Agent.
+- **External layer**: `.vscode/mcp.json` declares third-party MCP services — Playwright, GitHub, Blender-MCP, FreeCAD-MCP, Godot-MCP, and the official MATLAB MCP — connected via stdio or HTTP, all dispatched through VS Code Copilot Agent.
 - **Custom layer**: `omni_mcp.py` implements 48 tools across 15 modules in a single Python file, covering office documents, image processing, video transcoding, 3D modeling, scientific computing, and system utilities.
 
 Together, these layers allow an LLM Agent to execute end-to-end workflows — "fetch data → generate reports → render 3D scenes → export video → deploy game" — in a single conversation, with all calls made through the standard MCP protocol for full reproducibility.
@@ -22,7 +22,7 @@ Together, these layers allow an LLM Agent to execute end-to-end workflows — "f
 |------|-------------|
 | **Core server** | `omni_mcp.py` — 48 MCP tools, single-file implementation, stdio transport |
 | **Showcase variant** | `omni_mcp_academic.py` — behaviorally identical copy with enhanced comments and docstrings |
-| **Integration hub** | `.vscode/mcp.json` — unified registration of 6 services (see [Plugin Setup Guide](#33-external-mcp-service-configuration)) |
+| **Integration hub** | `.vscode/mcp.json` — unified registration of 7 services (see [Plugin Setup Guide](#33-external-mcp-service-configuration)) |
 | **Test evidence** | `mcp_test/` — inputs, outputs, logs, and report; 48/48 tools at 100% pass rate |
 | **Utility scripts** | `render_formulas.py` + `replace_formulas.py` — LaTeX formula rendering pipeline for academic PPTs |
 
@@ -71,6 +71,8 @@ Together, these layers allow an LLM Agent to execute end-to-end workflows — "f
 │  Chart / Utils      │  │  │ freecad-mcp (uvx)   │  │
 │                     │  │  ├─────────────────────┤  │
 │                     │  │  │ godot-mcp (npx)     │  │
+│                     │  │  ├─────────────────────┤  │
+│                     │  │  │ matlab (Go binary)  │  │
 │                     │  │  └─────────────────────┘  │
 └─────────────────────┘  └──────────────────────────┘
            │                          │
@@ -148,7 +150,7 @@ GODOT    = _find(r"D:\Godot*\Godot*.exe", ...) or "godot"
 
 ### 3.3 External MCP Service Configuration
 
-Six services are registered in `mcp.json`. Each is documented below with its purpose, launch mechanism, prerequisites, and verification method.
+Seven services are registered in `mcp.json`. Each is documented below with its purpose, launch mechanism, prerequisites, and verification method.
 
 #### 3.3.1 Playwright (Browser Automation)
 
@@ -244,7 +246,29 @@ Six services are registered in `mcp.json`. Each is documented below with its pur
 - **Note**: Exporting to executable requires pre-downloading platform export templates in Godot Editor (Editor → Manage Export Templates).
 - **Verification**: Call scene/node query tools within an existing Godot project directory.
 
-#### 3.3.6 omni-mcp (Custom Tool Server)
+#### 3.3.6 MATLAB Official MCP (by MathWorks)
+
+```jsonc
+"matlab": {
+  "command": "D:\\MCP\\matlab-mcp-core-server.exe",
+  "args": [
+    "--initial-working-folder=D:\\MCP\\mcp_test\\outputs",
+    "--matlab-display-mode=nodesktop",
+    "--disable-telemetry=true"
+  ],
+  "type": "stdio"
+}
+```
+
+- **Repository**: [matlab/matlab-mcp-core-server](https://github.com/matlab/matlab-mcp-core-server) (170★, Go, officially maintained by MathWorks)
+- **Purpose**: Start/quit MATLAB, execute code, run `.m` files, run tests, static code analysis (checkcode), detect installed toolboxes.
+- **Difference from omni-mcp**: omni-mcp's `matlab_eval`/`matlab_exec` call `matlab -batch` via CLI, cold-starting a MATLAB process each time; the official MCP maintains a **persistent MATLAB session** with variable persistence and `nodesktop` headless mode, yielding significantly higher execution efficiency.
+- **Prerequisites**:
+  1. MATLAB R2020b+ installed with `matlab` on system PATH.
+  2. Download [v0.5.0 Windows binary](https://github.com/matlab/matlab-mcp-core-server/releases/download/v0.5.0/matlab-mcp-core-server-win64.exe) to `D:\MCP\matlab-mcp-core-server.exe`.
+- **Verification**: Call `detect_matlab_toolboxes` or `evaluate_matlab_code` (code: `disp('hello')`).
+
+#### 3.3.7 omni-mcp (Custom Tool Server)
 
 ```jsonc
 "omni-mcp": {
@@ -295,6 +319,15 @@ Six services are registered in `mcp.json`. Each is documented below with its pur
       "command": "python",
       "args": ["d:\\omni_mcp.py"],
       "type": "stdio"
+    },
+    "matlab": {
+      "command": "D:\\MCP\\matlab-mcp-core-server.exe",
+      "args": [
+        "--initial-working-folder=D:\\MCP\\mcp_test\\outputs",
+        "--matlab-display-mode=nodesktop",
+        "--disable-telemetry=true"
+      ],
+      "type": "stdio"
     }
   },
   "inputs": []
@@ -313,8 +346,9 @@ After configuration, verify dependency chains in this order:
 | 4 | `ffmpeg_info` | Multimedia toolchain availability |
 | 5 | `img_create` → `img_info` | Image processing pipeline |
 | 6 | `blender_render` or `get_scene_info` (blender-mcp) | 3D rendering pipeline |
-| 7 | `matlab_eval` | Scientific computing pipeline |
-| 8 | `gimp_exec` | GIMP batch processing pipeline |
+| 7 | `matlab_eval` (omni-mcp) | Scientific computing pipeline (CLI mode) |
+| 8 | `evaluate_matlab_code` (matlab official MCP) | MATLAB persistent session mode |
+| 9 | `gimp_exec` | GIMP batch processing pipeline |
 
 Once smoke tests pass, reference `mcp_test/` inputs and logs for comprehensive regression testing.
 

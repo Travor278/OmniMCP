@@ -12,6 +12,9 @@ Desktop.ini
 .vscode/*
 !.vscode/mcp.json
 
+# Binaries
+matlab-mcp-core-server.exe
+
 # Temp
 *.tmp
 *.bak

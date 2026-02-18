@@ -31,6 +31,15 @@
       "command": "python",
       "args": ["d:\\omni_mcp.py"],
       "type": "stdio"
+    },
+    "matlab": {
+      "command": "D:\\MCP\\matlab-mcp-core-server.exe",
+      "args": [
+        "--initial-working-folder=D:\\MCP\\mcp_test\\outputs",
+        "--matlab-display-mode=nodesktop",
+        "--disable-telemetry=true"
+      ],
+      "type": "stdio"
     }
   },
   "inputs": []

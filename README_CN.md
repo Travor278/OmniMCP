@@ -6,7 +6,7 @@
 
 本项目围绕 **Model Context Protocol (MCP)** 构建了一套完整的多模态工程自动化框架。其核心思路是将"**外部现成 MCP 服务 / 插件**"与"**自研 MCP 工具服务器**"在同一工作区内协同运行：
 
-- **外部层**：通过 `.vscode/mcp.json` 集中声明 Playwright、GitHub、Blender-MCP、FreeCAD-MCP、Godot-MCP 等第三方 MCP 服务，各服务按 stdio 或 HTTP 方式接入，由 VS Code Copilot Agent 统一调度。
+- **外部层**：通过 `.vscode/mcp.json` 集中声明 Playwright、GitHub、Blender-MCP、FreeCAD-MCP、Godot-MCP、MATLAB 官方 MCP 等第三方 MCP 服务，各服务按 stdio 或 HTTP 方式接入，由 VS Code Copilot Agent 统一调度。
 - **自研层**：`omni_mcp.py` 以单文件形式实现 48 个工具（15 个模块），覆盖从办公文档、图像处理、视频转码到 3D 建模、科学计算的完整能力栈。
 
 两层协同后，LLM Agent 可在一次对话中完成"获取数据→生成报表→渲染 3D 场景→导出视频→部署游戏"等端到端工作流，所有调用均通过标准 MCP 协议完成，具备可复现性。
@@ -22,7 +22,7 @@
 |------|------|
 | **核心服务** | `omni_mcp.py` — 48 个 MCP 工具，单文件实现，stdio 模式运行 |
 | **展示版本** | `omni_mcp_academic.py` — 行为一致的学术展示副本，附加注释与文档字符串 |
-| **接入中枢** | `.vscode/mcp.json` — 6 项服务的统一注册（详见[插件接入指南](#33-外部-mcp-服务逐项配置)） |
+| **接入中枢** | `.vscode/mcp.json` — 7 项服务的统一注册（详见[插件接入指南](#33-外部-mcp-服务逐项配置)） |
 | **测试闭环** | `mcp_test/` — 输入、输出、日志与报告，48 项工具 100% 通过 |
 | **辅助脚本** | `render_formulas.py` + `replace_formulas.py` — 学术 PPT 公式渲染流水线 |
 
@@ -71,6 +71,8 @@
 │  Chart / Utils      │  │  │ freecad-mcp (uvx)   │  │
 │                     │  │  ├─────────────────────┤  │
 │                     │  │  │ godot-mcp (npx)     │  │
+│                     │  │  ├─────────────────────┤  │
+│                     │  │  │ matlab (Go binary)  │  │
 │                     │  │  └─────────────────────┘  │
 └─────────────────────┘  └──────────────────────────┘
            │                          │
@@ -148,7 +150,7 @@ GODOT    = _find(r"D:\Godot*\Godot*.exe", ...) or "godot"
 
 ### 3.3 外部 MCP 服务逐项配置
 
-`mcp.json` 中注册了 6 项服务。以下逐项说明各服务的作用、启动方式、前置条件及验证方法。
+`mcp.json` 中注册了 7 项服务。以下逐项说明各服务的作用、启动方式、前置条件及验证方法。
 
 #### 3.3.1 Playwright（浏览器自动化）
 
@@ -244,7 +246,29 @@ GODOT    = _find(r"D:\Godot*\Godot*.exe", ...) or "godot"
 - **注意事项**：导出为可执行文件时需要提前在 Godot Editor 中下载对应平台的导出模板（Editor → Manage Export Templates）。
 - **验证方式**：在已有 Godot 项目目录下调用 `get_scene_info` 或 `list_nodes` 类工具。
 
-#### 3.3.6 omni-mcp（自研工具服务器）
+#### 3.3.6 MATLAB 官方 MCP（MathWorks 出品）
+
+```jsonc
+"matlab": {
+  "command": "D:\\MCP\\matlab-mcp-core-server.exe",
+  "args": [
+    "--initial-working-folder=D:\\MCP\\mcp_test\\outputs",
+    "--matlab-display-mode=nodesktop",
+    "--disable-telemetry=true"
+  ],
+  "type": "stdio"
+}
+```
+
+- **项目地址**：[matlab/matlab-mcp-core-server](https://github.com/matlab/matlab-mcp-core-server)（170★，Go 编写，MathWorks 官方维护）
+- **作用**：启动/退出 MATLAB、执行代码、运行 `.m` 文件、运行测试、静态代码分析（checkcode）、检测已安装 Toolbox。
+- **与 omni-mcp 的区别**：omni-mcp 的 `matlab_eval` / `matlab_exec` 通过命令行调用 `matlab -batch`，每次调用冷启动一个 MATLAB 进程；MATLAB 官方 MCP 保持一个**持久化 MATLAB 会话**，支持变量持久化和 `nodesktop` 无头模式，执行效率显著更高。
+- **前置条件**：
+  1. MATLAB R2020b+ 已安装且 `matlab` 已加入系统 PATH。
+  2. 下载 [v0.5.0 Windows 二进制](https://github.com/matlab/matlab-mcp-core-server/releases/download/v0.5.0/matlab-mcp-core-server-win64.exe) 放置于 `D:\MCP\matlab-mcp-core-server.exe`。
+- **验证方式**：调用 `detect_matlab_toolboxes` 或 `evaluate_matlab_code`（代码 `disp('hello')`），应返回正常输出。
+
+#### 3.3.7 omni-mcp（自研工具服务器）
 
 ```jsonc
 "omni-mcp": {
@@ -295,6 +319,15 @@ GODOT    = _find(r"D:\Godot*\Godot*.exe", ...) or "godot"
       "command": "python",
       "args": ["d:\\omni_mcp.py"],
       "type": "stdio"
+    },
+    "matlab": {
+      "command": "D:\\MCP\\matlab-mcp-core-server.exe",
+      "args": [
+        "--initial-working-folder=D:\\MCP\\mcp_test\\outputs",
+        "--matlab-display-mode=nodesktop",
+        "--disable-telemetry=true"
+      ],
+      "type": "stdio"
     }
   },
   "inputs": []
@@ -313,8 +346,9 @@ GODOT    = _find(r"D:\Godot*\Godot*.exe", ...) or "godot"
 | 4 | `ffmpeg_info` | 多媒体工具链可用性 |
 | 5 | `img_create` → `img_info` | 图像处理链路 |
 | 6 | `blender_render` 或 `get_scene_info` (blender-mcp) | 3D 渲染链路 |
-| 7 | `matlab_eval` | 科学计算链路 |
-| 8 | `gimp_exec` | GIMP 批处理链路 |
+| 7 | `matlab_eval` (omni-mcp) | 科学计算链路（命令行模式） |
+| 8 | `evaluate_matlab_code` (matlab 官方 MCP) | MATLAB 持久会话模式 |
+| 9 | `gimp_exec` | GIMP 批处理链路 |
 
 冒烟测试通过后，可参考 `mcp_test/` 下的输入数据和运行日志进行更完整的功能回归。
 
