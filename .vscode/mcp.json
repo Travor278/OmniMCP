@@ -1,0 +1,37 @@
+{
+  "servers": {
+    "playwright": {
+      "command": "cmd",
+      "args": ["/c", "npx", "@playwright/mcp@latest"],
+      "type": "stdio"
+    },
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer ${env:GITHUB_TOKEN}"
+      }
+    },
+    "blender-mcp": {
+      "command": "cmd",
+      "args": ["/c", "uvx", "blender-mcp"],
+      "type": "stdio"
+    },
+    "freecad-mcp": {
+      "command": "cmd",
+      "args": ["/c", "uvx", "freecad-mcp"],
+      "type": "stdio"
+    },
+    "godot-mcp": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@satelliteoflove/godot-mcp"],
+      "type": "stdio"
+    },
+    "omni-mcp": {
+      "command": "python",
+      "args": ["d:\\omni_mcp.py"],
+      "type": "stdio"
+    }
+  },
+  "inputs": []
+}

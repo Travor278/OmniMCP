@@ -1,0 +1,9 @@
+res://scenes/bullet.tscn::76326a5d4297cdf332b94275e4c28b7c::1771380343::res://.godot/exported/133200997/export-6d8e6ff1e6f20a36e0402d27c623c86c-bullet.scn
+res://scenes/dash_enemy.tscn::9360c56ab60d97598e10d0255fe4fafb::1771380398::res://.godot/exported/133200997/export-54bb69dcc8ab59829cd4cf00a9382451-dash_enemy.scn
+res://scenes/enemy_bullet.tscn::91285c8ad7a510b5d7b969fa8ef86be6::1771380343::res://.godot/exported/133200997/export-f713053f834f32e17a15d73d96ac4bb3-enemy_bullet.scn
+res://scenes/health_pickup.tscn::f66890f31adc40093587bfbd93769e8a::1771380398::res://.godot/exported/133200997/export-58e0e3fd26f15e150566f5f3de0ab501-health_pickup.scn
+res://scenes/main.tscn::e543c36370b452822c17b83c3afa3754::1771380404::res://.godot/exported/133200997/export-3ad5c15c4f3250da0cc7c1af1770d85f-main.scn
+res://scenes/melee_enemy.tscn::9183562b870ddead52ef7f19bd9543c1::1771380356::res://.godot/exported/133200997/export-227a5b5c78acc3e7a2e52cd369c902b8-melee_enemy.scn
+res://scenes/player.tscn::a70ee301e5b63788ab1a0de3cf642b8f::1771380343::res://.godot/exported/133200997/export-234fb6894ec6226e856ab7f825500d3d-player.scn
+res://scenes/ranged_enemy.tscn::af78eb9d2bbbd325a05cfb5164b1da6b::1771380398::res://.godot/exported/133200997/export-101a7bd9365ce8856df551d223f24ede-ranged_enemy.scn
+res://scenes/xp_pickup.tscn::e5f23c5cbfa8dfa952d32dbb9d4555cf::1771380398::res://.godot/exported/133200997/export-4b47d0cd2c8c42ccedaf748caa068f02-xp_pickup.scn

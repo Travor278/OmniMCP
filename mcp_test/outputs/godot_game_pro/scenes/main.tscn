@@ -1,0 +1,37 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="2"]
+[ext_resource type="Script" path="res://scripts/ui/hud.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/ui/pause_menu.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/ui/game_over.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/ui/upgrade_menu.gd" id="6"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+
+[node name="Player" parent="." instance=ExtResource("2")]
+
+[node name="Enemies" type="Node2D" parent="."]
+
+[node name="Bullets" type="Node2D" parent="."]
+
+[node name="Pickups" type="Node2D" parent="."]
+
+[node name="HUD" type="CanvasLayer" parent="."]
+process_mode = 3
+script = ExtResource("3")
+
+[node name="PauseMenu" type="CanvasLayer" parent="."]
+process_mode = 3
+script = ExtResource("4")
+
+[node name="GameOver" type="CanvasLayer" parent="."]
+process_mode = 3
+script = ExtResource("5")
+
+[node name="UpgradeMenu" type="CanvasLayer" parent="."]
+process_mode = 3
+script = ExtResource("6")

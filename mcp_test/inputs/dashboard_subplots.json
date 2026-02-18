@@ -1,0 +1,38 @@
+[
+  {
+    "chart_type": "bar",
+    "title": "Monthly Output by Line",
+    "datasets": [
+      {"label": "Actual", "x": ["SMT-A","SMT-B","DIP","Assy","Pack"], "y": [8612,7085,5134,9650,9520], "color": "#2ecc71"},
+      {"label": "Plan", "x": ["SMT-A","SMT-B","DIP","Assy","Pack"], "y": [8500,7200,5000,9800,9500], "color": "#3498db", "alpha": 0.5}
+    ],
+    "x_label": "Line",
+    "y_label": "pcs"
+  },
+  {
+    "chart_type": "line",
+    "title": "Daily Energy Consumption (kWh)",
+    "datasets": [
+      {"label": "Total kWh", "x": [2,4,6,8,10,12,14,16,18,20,22,24,26,28], "y": [12850,12620,12480,12350,12280,12150,12080,11950,12100,12250,12180,12050,11980,11900], "color": "#e74c3c"},
+      {"label": "Compressor", "x": [2,4,6,8,10,12,14,16,18,20,22,24,26,28], "y": [4112,4038,3994,3832,3810,3769,3745,3704,3751,3798,3776,3736,3714,3689], "color": "#f39c12"}
+    ],
+    "x_label": "Day",
+    "y_label": "kWh"
+  },
+  {
+    "chart_type": "pie",
+    "title": "Defect Pareto",
+    "datasets": [
+      {"label": "Defects", "x": ["Cold Solder","Shift","Bridge","Torque","Bent Lead","Missing","Crack","Label"], "y": [98,67,45,6,5,4,3,4], "colors": ["#e74c3c","#3498db","#f39c12","#2ecc71","#9b59b6","#1abc9c","#e67e22","#95a5a6"]}
+    ]
+  },
+  {
+    "chart_type": "bar",
+    "title": "Equipment OEE (%)",
+    "datasets": [
+      {"label": "OEE", "x": ["SMT","Reflow","AOI","ICT","Robot","Pack"], "y": [92.1,89.7,94.3,87.6,96.1,82.4], "color": "#8e44ad"}
+    ],
+    "x_label": "Equipment",
+    "y_label": "OEE %"
+  }
+]
