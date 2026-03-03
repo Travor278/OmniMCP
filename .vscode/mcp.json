@@ -29,7 +29,7 @@
     },
     "omni-mcp": {
       "command": "python",
-      "args": ["d:\\omni_mcp.py"],
+      "args": ["d:\\MCP\\omni_mcp.py"],
       "type": "stdio"
     },
     "matlab": {

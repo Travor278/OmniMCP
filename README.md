@@ -21,7 +21,6 @@ Together, these layers allow an LLM Agent to execute end-to-end workflows — "f
 | Item | Description |
 |------|-------------|
 | **Core server** | `omni_mcp.py` — 48 MCP tools, single-file implementation, stdio transport |
-| **Showcase variant** | `omni_mcp_academic.py` — behaviorally identical copy with enhanced comments and docstrings |
 | **Integration hub** | `.vscode/mcp.json` — unified registration of 7 services (see [Plugin Setup Guide](#33-external-mcp-service-configuration)) |
 | **Test evidence** | `mcp_test/` — inputs, outputs, logs, and report; 48/48 tools at 100% pass rate |
 | **Utility scripts** | `render_formulas.py` + `replace_formulas.py` — LaTeX formula rendering pipeline for academic PPTs |
@@ -132,7 +131,7 @@ If `npx` is unavailable, install Node.js first. If `uvx` is unavailable, install
 
 ### 3.2 omni-mcp Executable Path Configuration
 
-Open `omni_mcp.py` (or `omni_mcp_academic.py`). The `CONFIG` section at the top declares path constants for each external executable. The server uses a `_find()` function to auto-search common installation directories at startup, but manual verification is recommended:
+Open `omni_mcp.py`. The `CONFIG` section at the top declares path constants for each external executable. The server uses a `_find()` function to auto-search common installation directories at startup, but manual verification is recommended:
 
 ```python
 # ========== CONFIG ==========
@@ -273,14 +272,13 @@ Seven services are registered in `mcp.json`. Each is documented below with its p
 ```jsonc
 "omni-mcp": {
   "command": "python",
-  "args": ["d:\\omni_mcp.py"],
+  "args": ["d:\\MCP\\omni_mcp.py"],
   "type": "stdio"
 }
 ```
 
 - **Purpose**: The project's core — provides all 48 custom tools (see Capability Matrix above).
 - **Prerequisites**: Python 3.10+ with all pip dependencies installed.
-- **Version switching**: To use the academic showcase variant, change args to `["d:\\MCP\\omni_mcp_academic.py"]`.
 - **Verification**: Call `system_info` — it should return OS details, memory, Python version, and availability status for each external tool.
 
 ### 3.4 Complete mcp.json Reference
@@ -317,7 +315,7 @@ Seven services are registered in `mcp.json`. Each is documented below with its p
     },
     "omni-mcp": {
       "command": "python",
-      "args": ["d:\\omni_mcp.py"],
+      "args": ["d:\\MCP\\omni_mcp.py"],
       "type": "stdio"
     },
     "matlab": {
@@ -412,8 +410,7 @@ Path constants, process creation flags (`CREATE_NO_WINDOW`), and encoding handli
 MCP/
 ├── .vscode/
 │   └── mcp.json                  # MCP service registration hub
-├── omni_mcp.py                   # Custom MCP server (48 tools, main runtime, not in repo)
-├── omni_mcp_academic.py          # Academic showcase variant (identical behavior, detailed comments)
+├── omni_mcp.py                   # Custom MCP server (48 tools, single-file implementation)
 ├── render_formulas.py            # LaTeX formula rendering script
 ├── replace_formulas.py           # PPT formula replacement script
 ├── MCP_Academic_Ultimate.pptx    # Academic presentation PPT
@@ -433,6 +430,6 @@ MCP/
 
 ---
 
-## License & Disclaimer
+## License
 
-This project is a personal research initiative aimed at validating the feasibility of the MCP protocol for multimodal tool orchestration. Code and documentation are provided for academic reference only.
+This project is licensed under the [MIT License](LICENSE). Contributions are welcome.

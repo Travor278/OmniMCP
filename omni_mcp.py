@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""omni_mcp v2 (academic-style mirror)
+"""omni_mcp v2
 Unified MCP server implementation for multimodal engineering workflows.
 The service integrates office-document automation, raster/vector graphics,
 media transcoding, and 3D/CAD tool orchestration under a single tool API.
-This file is a style-refined copy of ``d:\\omni_mcp.py`` with behavior preserved.
 """
 import glob
 import json
