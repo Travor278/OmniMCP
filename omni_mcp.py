@@ -216,32 +216,91 @@ async def pptx_edit(path:str,ops:str="[]")->str:
         return J(False,err=str(e))
 # --- DOCX SUBSYSTEM: Document generation and replacement ---
 @mcp.tool(name="docx_create")
-async def docx_create(path:str,content:str="[]",template:str="")->str:
+async def docx_create(path:str,content:str="[]",template:str="",
+                      preset:str="")->str:
     """创建Word文档
-    content: JSON数组:
-      {"type":"heading","text":"","level":1}
-      {"type":"para","text":"","bold":false,"italic":false,"size":12,"color":"000000","align":"left"}
+    content: JSON数组,每个元素是以下类型之一:
+      {"type":"heading","text":"标题","level":1, "font":"Times New Roman","font_cjk":"黑体"}
+      {"type":"para","text":"正文","bold":false,"italic":false,"size":12,
+       "color":"000000","align":"left","font":"Times New Roman","font_cjk":"宋体",
+       "line_spacing":1.5,"indent":0.74}
       {"type":"table","rows":[["a","b"],["c","d"]],"header":true,"col_widths":[3,5]}
-      {"type":"image","path":"","width":5}
-      {"type":"list","items":["a","b","c"],"style":"bullet"|"number"}
-      {"type":"toc"} (目录占位)
-      {"type":"hr"} (水平线)
-      {"type":"break"}
+      {"type":"image","path":"图片路径","width":5}
+      {"type":"list","items":["a","b"],"style":"bullet","font":"...","font_cjk":"...","size":12}
+      {"type":"toc"} {"type":"hr"} {"type":"break"}
+    注意: 段落类型是 "para" 不是 "paragraph"
+    preset: 可选预设风格,设置后自动配置全局字体/行距:
+      "academic_cn" = 中文论文(标题黑体,正文宋体12pt,1.5倍行距,首行缩进)
+      "business" = 商务文档(标题Arial,正文Calibri 11pt)
+      空 = 不使用预设,手动控制
     template: 可选模板docx路径"""
     from docx import Document
     from docx.shared import Inches,Pt,RGBColor,Cm
     from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from docx.oxml.ns import qn
     try:
         doc=Document(str(R(template))) if template else Document()
+        # 预设风格配置
+        _presets={
+            "academic_cn":{"heading_font":"Times New Roman","heading_cjk":"黑体",
+                           "body_font":"Times New Roman","body_cjk":"宋体",
+                           "body_size":12,"line_spacing":1.5,"indent":0.74},
+            "business":{"heading_font":"Arial","heading_cjk":"微软雅黑",
+                        "body_font":"Calibri","body_cjk":"微软雅黑",
+                        "body_size":11,"line_spacing":1.15,"indent":0},
+        }
+        _pre=_presets.get(preset,{})
+        if _pre:
+            # 应用预设到默认样式
+            for sn in ['Normal']:
+                s=doc.styles[sn]
+                s.font.name=_pre["body_font"]
+                s.font.size=Pt(_pre["body_size"])
+                s._element.rPr.rFonts.set(qn('w:eastAsia'),_pre["body_cjk"])
+                s.paragraph_format.line_spacing=_pre["line_spacing"]
+            for lvl in range(4):
+                sn='Title' if lvl==0 else f'Heading {lvl}'
+                try:
+                    hs=doc.styles[sn]
+                    hs.font.name=_pre["heading_font"]
+                    hs._element.rPr.rFonts.set(qn('w:eastAsia'),_pre["heading_cjk"])
+                except:pass
+            for sn in ['List Bullet','List Number']:
+                try:
+                    ls=doc.styles[sn]
+                    ls.font.name=_pre["body_font"]
+                    ls.font.size=Pt(_pre["body_size"])
+                    ls._element.rPr.rFonts.set(qn('w:eastAsia'),_pre["body_cjk"])
+                    ls.paragraph_format.line_spacing=_pre["line_spacing"]
+                except:pass
+        def _apply_font(run,c,fallback_type="body"):
+            """统一应用字体到run"""
+            fn=c.get("font") or _pre.get(f"{fallback_type}_font")
+            fcjk=c.get("font_cjk") or _pre.get(f"{fallback_type}_cjk")
+            if fn: run.font.name=fn
+            if fcjk: run._element.rPr.rFonts.set(qn('w:eastAsia'),fcjk)
+        def _apply_para_fmt(p,c):
+            """统一应用段落格式"""
+            ls=c.get("line_spacing") or _pre.get("line_spacing")
+            ind=c.get("indent")
+            if ind is None: ind=_pre.get("indent")
+            if ls: p.paragraph_format.line_spacing=ls
+            if ind: p.paragraph_format.first_line_indent=Cm(ind)
         aligns={"left":WD_ALIGN_PARAGRAPH.LEFT,"center":WD_ALIGN_PARAGRAPH.CENTER,
                 "right":WD_ALIGN_PARAGRAPH.RIGHT,"justify":WD_ALIGN_PARAGRAPH.JUSTIFY}
         for c in json.loads(content):
             t=c["type"]
             if t=="heading":
-                doc.add_heading(c["text"],level=c.get("level",1))
+                h=doc.add_heading(c["text"],level=c.get("level",1))
+                if c.get("font") or c.get("font_cjk"):
+                    for run in h.runs:
+                        _apply_font(run,c,"heading")
+                if c.get("align"):
+                    h.alignment=aligns.get(c["align"],WD_ALIGN_PARAGRAPH.LEFT)
             elif t=="para":
                 p=doc.add_paragraph()
                 r=p.add_run(c["text"])
+                _apply_font(r,c,"body")
                 if c.get("bold"):
                     r.bold=True
                 if c.get("italic"):
@@ -254,6 +313,7 @@ async def docx_create(path:str,content:str="[]",template:str="")->str:
                     r.font.color.rgb=RGBColor.from_string(c["color"])
                 if c.get("align"):
                     p.alignment=aligns.get(c["align"],WD_ALIGN_PARAGRAPH.LEFT)
+                _apply_para_fmt(p,c)
             elif t=="table":
                 rows=c["rows"]
                 if not rows:
@@ -276,7 +336,11 @@ async def docx_create(path:str,content:str="[]",template:str="")->str:
             elif t=="list":
                 sty='List Bullet' if c.get("style","bullet")=="bullet" else 'List Number'
                 for item in c.get("items",[]):
-                    doc.add_paragraph(item,style=sty)
+                    lp=doc.add_paragraph(style=sty)
+                    lr=lp.add_run(item)
+                    _apply_font(lr,c,"body")
+                    if c.get("size"): lr.font.size=Pt(c["size"])
+                    _apply_para_fmt(lp,c)
             elif t=="hr":
                 p=doc.add_paragraph()
                 p.add_run().add_break()
@@ -343,12 +407,18 @@ async def docx_replace(path:str,replacements:str="{}",output:str="")->str:
 # --- XLSX SUBSYSTEM: Workbook operations and charting ---
 @mcp.tool(name="xlsx_create")
 async def xlsx_create(path:str,sheets:str='[{"name":"Sheet1","data":[]}]')->str:
-    """创建Excel
-    sheets: JSON数组:
-      {"name":"Sheet1","data":[[...],[...]],"widths":[15,20],
-       "freeze":"A2","auto_filter":true,
-       "merge":[{"range":"A1:C1","value":"标题"}],
-       "styles":[{"range":"A1:Z1","bold":true,"bg":"FFFF00","font_color":"000000"}]}"""
+    """创建Excel工作簿
+    sheets: JSON数组(注意是数组!), 每个元素代表一个工作表:
+    [{
+      "name": "Sheet1",
+      "data": [["表头A","表头B"],["数据1","数据2"]],  ← 二维数组,第一行通常是表头
+      "widths": [15,20],        ← 可选,各列宽度
+      "freeze": "A2",           ← 可选,冻结窗格
+      "auto_filter": true,      ← 可选,自动筛选
+      "merge": [{"range":"A1:C1","value":"合并标题"}],  ← 可选
+      "styles": [{"range":"A1:D1","bold":true,"bg":"FFFF00","font_color":"000000","font_size":11}]  ← 可选
+    }]
+    ⚠ 常见错误: 不要用 headers+rows, 所有数据统一放在 data 二维数组中"""
     from openpyxl import Workbook
     from openpyxl.utils import get_column_letter
     from openpyxl.styles import Font,PatternFill,Alignment
@@ -1028,22 +1098,36 @@ async def chart_create(path:str,chart_type:str="line",title:str="",
                        w:float=10,h:float=6,style:str="default",dpi:int=150,
                        grid:bool=True,legend_pos:str="best",
                        annotations:str="[]",x_rotation:int=0)->str:
-    """创建图表并保存为图片(增强版)
+    """创建图表并保存为图片
     chart_type: line|bar|scatter|pie|hist|area|box|hbar|stackbar|heatmap|radar|stem|step
-    datasets: JSON数组: {"label":"","x":[],"y":[],"color":"","marker":"o","linestyle":"-","linewidth":2}
-    pie: {"labels":[],"values":[],"colors":[],"explode":[]}
-    hist: {"y":[],"bins":20}
-    heatmap: {"data":[[...]],"xlabels":[],"ylabels":[],"cmap":"viridis"}
+    datasets: JSON**数组**(必须是[...],不是裸对象{}),每个元素格式按chart_type:
+      通用: [{"label":"","x":[],"y":[],"color":"","marker":"o","linestyle":"-","linewidth":2}]
+      pie:  [{"labels":["A","B"],"values":[60,40],"colors":["#ff0000","#00ff00"],"explode":[0.05,0]}]
+      hist: [{"y":[数据],"bins":20}]
+      heatmap: [{"data":[[1,2],[3,4]],"xlabels":[],"ylabels":[],"cmap":"viridis"}]
+    ⚠ 常见错误: datasets 传了 {} 而不是 [{}], 会导致索引错误
+    w,h: 图表宽高(英寸),如 w=8,h=6 → 800×600px(dpi=100)
     annotations: [{"text":"标注","x":2,"y":5,"arrow":true}]
-    legend_pos: best|upper right|upper left|lower right|lower left|center"""
+    legend_pos: best|upper right|upper left|lower right|lower left|center
+    已内置CJK中文字体支持,无需额外配置"""
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    import matplotlib.font_manager as fm
     import numpy as np
     try:
+        # 先应用样式(会重置rcParams),再配置中文字体
         if style in plt.style.available:
             plt.style.use(style)
-        fig,ax=plt.subplots(figsize=(w,h))
+        # 配置中文字体支持(必须在style.use之后,否则会被重置)
+        _cjk=[f.name for f in fm.fontManager.ttflist if any(k in f.name for k in ('Microsoft YaHei','SimHei','SimSun','PingFang','Noto Sans CJK'))]
+        if _cjk:
+            plt.rcParams['font.sans-serif']=[_cjk[0]]+plt.rcParams.get('font.sans-serif',[])
+        else:
+            plt.rcParams['font.sans-serif']=['Microsoft YaHei','SimHei','SimSun']+plt.rcParams.get('font.sans-serif',[])
+        plt.rcParams['axes.unicode_minus']=False
+        fig,ax=plt.subplots(figsize=(w,h),facecolor='white')
+        ax.set_facecolor('white')
         ds=json.loads(datasets)
         ct=chart_type
         if ct=="pie":
@@ -1137,7 +1221,7 @@ async def chart_create(path:str,chart_type:str="line",title:str="",
             plt.xticks(rotation=x_rotation)
         plt.tight_layout()
         p=str(R(path))
-        fig.savefig(p,dpi=dpi,bbox_inches='tight')
+        fig.savefig(p,dpi=dpi,bbox_inches='tight',facecolor='white')
         plt.close()
         return J(path=p)
     except Exception as e:
@@ -1154,13 +1238,22 @@ async def chart_subplot(path:str,rows:int=1,cols:int=2,
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    import matplotlib.font_manager as fm
     try:
+        # 先应用样式(会重置rcParams),再配置中文字体
         if style:
             try:
                 plt.style.use(style)
             except:
                 pass
-        fig,axes=plt.subplots(rows,cols,figsize=(w,h))
+        # 配置中文字体支持(必须在style.use之后,否则会被重置)
+        _cjk=[f.name for f in fm.fontManager.ttflist if any(k in f.name for k in ('Microsoft YaHei','SimHei','SimSun','PingFang','Noto Sans CJK'))]
+        if _cjk:
+            plt.rcParams['font.sans-serif']=[_cjk[0]]+plt.rcParams.get('font.sans-serif',[])
+        else:
+            plt.rcParams['font.sans-serif']=['Microsoft YaHei','SimHei','SimSun']+plt.rcParams.get('font.sans-serif',[])
+        plt.rcParams['axes.unicode_minus']=False
+        fig,axes=plt.subplots(rows,cols,figsize=(w,h),facecolor='white')
         if rows*cols==1:
             axes=[axes]
         elif rows==1 or cols==1:
@@ -1210,7 +1303,7 @@ async def chart_subplot(path:str,rows:int=1,cols:int=2,
             fig.suptitle(title,fontsize=14,fontweight='bold',y=1.02)
         plt.tight_layout()
         p=str(R(path))
-        fig.savefig(p,dpi=dpi,bbox_inches='tight')
+        fig.savefig(p,dpi=dpi,bbox_inches='tight',facecolor='white')
         plt.close()
         return J(path=p)
     except Exception as e:
