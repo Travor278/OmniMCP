@@ -60,25 +60,25 @@ Together, these layers allow an LLM Agent to execute end-to-end workflows — "f
            │ stdio                    │ stdio / HTTP
            ▼                          ▼
 ┌─────────────────────┐  ┌──────────────────────────┐
-│    omni-mcp         │  │   External MCP Services   │
-│  (omni_mcp.py)      │  │  ┌─────────────────────┐  │
-│                     │  │  │ playwright (npx)    │  │
-│  48 tools across    │  │  ├─────────────────────┤  │
-│  15 modules         │  │  │ github (HTTP API)   │  │
-│                     │  │  ├─────────────────────┤  │
-│  Office / Image /   │  │  │ blender-mcp (uvx)   │  │
-│  Media / CAD /      │  │  ├─────────────────────┤  │
-│  Chart / Utils      │  │  │ freecad-mcp (uvx)   │  │
-│                     │  │  ├─────────────────────┤  │
-│                     │  │  │ godot-mcp (npx)     │  │
-│                     │  │  ├─────────────────────┤  │
-│                     │  │  │ matlab (Go binary)  │  │
-│                     │  │  └─────────────────────┘  │
+│    omni-mcp         │  │   External MCP Services  │
+│  (omni_mcp.py)      │  │  ┌─────────────────────┐ │
+│                     │  │  │ playwright (npx)    │ │
+│  48 tools across    │  │  ├─────────────────────┤ │
+│  15 modules         │  │  │ github (HTTP API)   │ │
+│                     │  │  ├─────────────────────┤ │
+│  Office / Image /   │  │  │ blender-mcp (uvx)   │ │
+│  Media / CAD /      │  │  ├─────────────────────┤ │
+│  Chart / Utils      │  │  │ freecad-mcp (uvx)   │ │
+│                     │  │  ├─────────────────────┤ │
+│                     │  │  │ godot-mcp (npx)     │ │
+│                     │  │  ├─────────────────────┤ │
+│                     │  │  │ matlab (Go binary)  │ │
+│                     │  │  └─────────────────────┘ │
 └─────────────────────┘  └──────────────────────────┘
            │                          │
            ▼                          ▼
 ┌─────────────────────────────────────────────────────┐
-│              Local Executables & Runtimes            │
+│              Local Executables & Runtimes           │
 │  Blender · MATLAB · FFmpeg · GIMP · Inkscape ·      │
 │  FreeCAD · Godot · Python · Node.js                 │
 └─────────────────────────────────────────────────────┘
