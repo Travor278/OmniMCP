@@ -387,6 +387,10 @@ Blender, GIMP, FreeCAD, and Godot exhibit behavior that varies significantly by 
 
 Path constants, process creation flags (`CREATE_NO_WINDOW`), and encoding handling are built around Windows assumptions. Linux and macOS out-of-the-box compatibility requires a dedicated abstraction layer.
 
+### 4.7 Basic Document Styling
+
+Generated PPTX, DOCX, and PDF files use basic system fonts (Calibri, Arial, SimSun) and simple layouts. There is no Office theme engine — colors, typography, and element positioning are functional but not publication-ready. **Treat OmniMCP as a rapid-prototyping tool**: generate the structure and content quickly, then refine styling in native editors (PowerPoint, Word, Acrobat, etc.). Users who need custom fonts or branding may modify the font/color constants in `omni_mcp.py` directly.
+
 ---
 
 ## Development Roadmap
