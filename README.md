@@ -7,7 +7,7 @@
 This project implements a complete multimodal engineering automation framework built on the **Model Context Protocol (MCP)**. The core design philosophy couples **external, prebuilt MCP services/plugins** with a **custom in-house MCP tool server**, both running cooperatively within a single VS Code workspace:
 
 - **External layer**: `.vscode/mcp.json` declares third-party MCP services — Playwright, GitHub, Blender-MCP, FreeCAD-MCP, Godot-MCP, and the official MATLAB MCP — connected via stdio or HTTP, all dispatched through VS Code Copilot Agent.
-- **Custom layer**: `omni_mcp.py` implements 48 tools across 15 modules in a single Python file, covering office documents, image processing, video transcoding, 3D modeling, scientific computing, and system utilities.
+- **Custom layer**: `omni_mcp.py` implements 54 tools across 15 modules in a single Python file, covering office documents, image processing, video transcoding, 3D modeling, scientific computing, and system utilities.
 
 Together, these layers allow an LLM Agent to execute end-to-end workflows — "fetch data → generate reports → render 3D scenes → export video → deploy game" — in a single conversation, with all calls made through the standard MCP protocol for full reproducibility.
 
@@ -20,7 +20,7 @@ Together, these layers allow an LLM Agent to execute end-to-end workflows — "f
 
 | Item | Description |
 |------|-------------|
-| **Core server** | `omni_mcp.py` — 48 MCP tools, single-file implementation, stdio transport |
+| **Core server** | `omni_mcp.py` — 54 MCP tools, single-file implementation, stdio transport |
 | **Integration hub** | `.vscode/mcp.json` — unified registration of 7 services (see [Plugin Setup Guide](#33-external-mcp-service-configuration)) |
 | **Test evidence** | `mcp_test/` — inputs, outputs, logs, and report; 48/48 tools at 100% pass rate |
 | **Utility scripts** | `render_formulas.py` + `replace_formulas.py` — LaTeX formula rendering pipeline for academic PPTs |
@@ -32,13 +32,13 @@ Together, these layers allow an LLM Agent to execute end-to-end workflows — "f
 | Module | Tools | Coverage |
 |--------|------:|----------|
 | PPTX | 3 | Create (title/content/image/style), read slide structure, edit (text/notes/layout) |
-| DOCX | 3 | Create (paragraph/table/image/list), read, find-and-replace |
+| DOCX | 3 | Create (paragraph/table/image/list, preset styles for academic/business), read, find-and-replace |
 | XLSX | 4 | Create workbook (multi-sheet), read, append write, insert chart |
 | PDF | 6 | Generate (with CJK font cascade registration), read, merge, split, watermark, rasterize to PNG |
 | IMAGE | 5 | Create canvas, read metadata, processing pipeline (resize/crop/filter/text/etc.), format conversion, multi-image compositing (grid/horizontal/vertical) |
 | BLENDER | 3 | Python script execution, scene structure query, EEVEE/Cycles rendering |
 | SVG | 1 | Text-description-based vector scene synthesis |
-| CHART | 2 | Single chart + multi-subplot dashboard (bar/line/scatter/pie/area) |
+| CHART | 2 | Single chart + multi-subplot dashboard (bar/line/scatter/pie/area/hist/heatmap/radar/box/stem/step) |
 | MATLAB | 2 | Expression evaluation, .m script execution (with GBK encoding compatibility) |
 | FFMPEG | 6 | Media probe, transcode, time-range clip, frame screenshot, GIF generation, custom exec |
 | GIMP | 2 | Script-Fu batch processing (gimp-console headless), Python-Fu scripting |
@@ -62,7 +62,7 @@ Together, these layers allow an LLM Agent to execute end-to-end workflows — "f
 │    omni-mcp         │  │   External MCP Services  │
 │  (omni_mcp.py)      │  │  ┌─────────────────────┐ │
 │                     │  │  │ playwright (npx)    │ │
-│  48 tools across    │  │  ├─────────────────────┤ │
+│  54 tools across    │  │  ├─────────────────────┤ │
 │  15 modules         │  │  │ github (HTTP API)   │ │
 │                     │  │  ├─────────────────────┤ │
 │  Office / Image /   │  │  │ blender-mcp (uvx)   │ │
@@ -277,7 +277,7 @@ Seven services are registered in `mcp.json`. Each is documented below with its p
 }
 ```
 
-- **Purpose**: The project's core — provides all 48 custom tools (see Capability Matrix above).
+- **Purpose**: The project's core — provides all 54 custom tools (see Capability Matrix above).
 - **Prerequisites**: Python 3.10+ with all pip dependencies installed.
 - **Verification**: Call `system_info` — it should return OS details, memory, Python version, and availability status for each external tool.
 
@@ -381,7 +381,7 @@ Blender, GIMP, FreeCAD, and Godot exhibit behavior that varies significantly by 
 
 ### 4.5 Single-File Architecture Scalability
 
-`omni_mcp.py` concentrates all 48 tools, configuration constants, and helper functions in roughly 1,400 lines. While this supports rapid prototyping, code navigation, multi-contributor collaboration, and unit test isolation costs will increase as the tool count grows.
+`omni_mcp.py` concentrates all 54 tools, configuration constants, and helper functions in roughly 1,750 lines. While this supports rapid prototyping, code navigation, multi-contributor collaboration, and unit test isolation costs will increase as the tool count grows.
 
 ### 4.6 Limited Cross-Platform Support
 
@@ -414,7 +414,7 @@ Generated PPTX, DOCX, and PDF files use basic system fonts (Calibri, Arial, SimS
 MCP/
 ├── .vscode/
 │   └── mcp.json                  # MCP service registration hub
-├── omni_mcp.py                   # Custom MCP server (48 tools, single-file implementation)
+├── omni_mcp.py                   # Custom MCP server (54 tools, single-file implementation)
 ├── render_formulas.py            # LaTeX formula rendering script
 ├── replace_formulas.py           # PPT formula replacement script
 ├── MCP_Academic_Ultimate.pptx    # Academic presentation PPT
