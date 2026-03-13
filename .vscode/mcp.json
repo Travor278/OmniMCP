@@ -40,6 +40,23 @@
         "--disable-telemetry=true"
       ],
       "type": "stdio"
+    },
+    "scrapling": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "uvx",
+        "--from",
+        "scrapling[ai]",
+        "scrapling",
+        "mcp"
+      ],
+      "type": "stdio"
+    },
+    "arxiv": {
+      "command": "cmd",
+      "args": ["/c", "uvx", "arxiv-mcp-server"],
+      "type": "stdio"
     }
   },
   "inputs": []
